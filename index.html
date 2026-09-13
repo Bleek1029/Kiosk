@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kiosk Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+/* ---------------------------------------------------------
+   OmniKiosk Terminal — tokens
+--------------------------------------------------------- */
+:root {
+  --bg: #0A0D16;
+  --panel-bg: #121729;
+  --panel-border: #1E2540;
+  --card-bg: #1A2036;
+  --card-border: #262E4A;
+  --card-border-active: #3B82F6;
+
+  --accent: #4EA8FF;
+  --accent-strong: #3B82F6;
+  --accent-strong-hover: #2F6FDE;
+
+  --text-primary: #E5E9F5;
+  --text-muted: #8A93B3;
+
+  --mono-bg: #10162B;
+  --mono-border: #232B48;
+
+  --green-bg: #123524;
+  --green-border: #235C3C;
+  --green-text: #4ADE80;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(1.5rem, 6vh, 5rem) 1.25rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   Terminal panel
+--------------------------------------------------------- */
+.terminal {
+  width: 100%;
+  max-width: 780px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.terminal-header h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.status-badge {
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  color: var(--green-text);
+}
+
+/* ---------------------------------------------------------
+   Card grid
+--------------------------------------------------------- */
+.terminal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1.75rem;
+}
+
+@media (max-width: 720px) {
+  .terminal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.term-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  transition: border-color 0.15s ease;
+}
+
+/* Hook for JS to add on mouseenter / remove on mouseleave —
+   not a plain CSS :hover, since it's driven by an actual
+   addEventListener pair. */
+.term-card.is-active {
+  border-color: var(--card-border-active);
+}
+
+.term-card h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--accent);
+  margin: 0 0 0.5rem;
+}
+
+.term-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.term-status {
+  margin-top: 0.7rem !important;
+  font-size: 0.8rem !important;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------
+   Keyboard / scroll output box
+--------------------------------------------------------- */
+.term-output {
+  margin: 0.7rem 0 0;
+  padding: 0.6rem 0.75rem;
+  background: var(--mono-bg);
+  border: 1px solid var(--mono-border);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------------------------------------------------------
+   Auth input
+--------------------------------------------------------- */
+.term-input {
+  width: 100%;
+  margin-top: 0.7rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--mono-bg);
+  border: 1px solid var(--mono-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+.term-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------
+   Drag & drop
+--------------------------------------------------------- */
+.drag-chip {
+  display: inline-block;
+  margin-top: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--accent-strong);
+  border-radius: 999px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: grab;
+  user-select: none;
+}
+
+.drag-chip:active {
+  cursor: grabbing;
+}
+
+.drop-zone {
+  margin-top: 0.7rem;
+  padding: 0.9rem 0.7rem;
+  border: 1px dashed var(--mono-border);
+  border-radius: 8px;
+  background: var(--mono-bg);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.drop-zone.is-dragover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.drop-zone.is-dropped {
+  border-style: solid;
+  border-color: var(--green-border);
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+/* ---------------------------------------------------------
+   Runtime button
+--------------------------------------------------------- */
+.term-button {
+  margin-top: 0.8rem;
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  background: var(--accent-strong);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.term-button:hover {
+  background: var(--accent-strong-hover);
+}
+
+/* State the JS applies once the listener is permanently
+   removed via removeEventListener. */
+.term-button.is-disabled {
+  background: #2A2F45;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+  </style>
+</head>
+<body>
+
+  <main class="terminal">
+    <header class="terminal-header">
+      <h1>kiosk Terminal</h1>
+      <span class="status-badge" id="system-status">System Online</span>
+    </header>
+
+    <div class="terminal-grid">
+
+      <!-- mouseenter / mouseleave target -->
+      <article class="term-card" id="card-hover">
+        <h2>Proximity Diagnostics</h2>
+        <p>Move your cursor into and out of this card.</p>
+      </article>
+
+      <!-- wheel target -->
+      <article class="term-card" id="card-scroll">
+        <h2>Scroll Wheel Stream</h2>
+        <p>Scroll your mouse wheel or trackpad over this card:</p>
+        <pre class="term-output" id="scroll-output">deltaY: — | Direction: —</pre>
+      </article>
+
+      <!-- input / change target -->
+      <article class="term-card" id="card-auth">
+        <h2>User Authentication Prompt</h2>
+        <label for="auth-input" class="visually-hidden">Authentication field</label>
+        <input type="text" id="auth-input" class="term-input" placeholder="Type to see live updates…">
+        <p class="term-status" id="auth-status">Field is idle.</p>
+      </article>
+
+      <!-- dragstart / drop target -->
+      <article class="term-card" id="card-dragdrop">
+        <h2>Drag &amp; Drop Zone</h2>
+        <p>Drag the chip into the drop zone below.</p>
+        <div class="drag-chip" id="drag-chip" draggable="true">DRAG ME</div>
+        <div class="drop-zone" id="drop-zone">Drop here</div>
+        <p class="term-status" id="dragdrop-status">Waiting for drop…</p>
+      </article>
+
+      <!-- pointerdown target + removeEventListener demo -->
+      <article class="term-card" id="card-runtime">
+        <h2>Runtime Event Controller</h2>
+        <p>Press the button below to register pointer presses, or watch the listener detach itself via code.</p>
+        <button type="button" id="runtime-btn" class="term-button">Press Me (Active)</button>
+        <p class="term-status" id="runtime-status">Presses registered: 0</p>
+      </article>
+
+    </div>
+  </main>
+
+  <script>
+/* ---------------------------------------------------------
+   OmniKiosk Terminal — behavior
+--------------------------------------------------------- */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  /* -------------------------------------------------------
+     Proximity Diagnostics — mouseenter / mouseleave
+     Unlike mouseover/mouseout, these don't bubble from child
+     elements, so the card only reacts to the cursor crossing
+     its own boundary.
+  ------------------------------------------------------- */
+  const hoverCard = document.getElementById('card-hover');
+
+  hoverCard.addEventListener('mouseenter', () => {
+    hoverCard.classList.add('is-active');
+  });
+
+  hoverCard.addEventListener('mouseleave', () => {
+    hoverCard.classList.remove('is-active');
+  });
+
+  /* -------------------------------------------------------
+     Scroll Wheel Stream — wheel
+     Reports scroll delta and direction while the pointer is
+     over the card.
+  ------------------------------------------------------- */
+  const scrollCard = document.getElementById('card-scroll');
+  const scrollOutput = document.getElementById('scroll-output');
+
+  scrollCard.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const direction = e.deltaY > 0 ? 'down' : 'up';
+    scrollOutput.textContent = `deltaY: ${e.deltaY.toFixed(0)} | Direction: ${direction}`;
+  }, { passive: false });
+
+  /* -------------------------------------------------------
+     User Authentication Prompt — input / change
+     "input" fires on every keystroke for live feedback;
+     "change" fires once the field is committed (loses focus
+     with a new value).
+  ------------------------------------------------------- */
+  const authInput = document.getElementById('auth-input');
+  const authStatus = document.getElementById('auth-status');
+
+  authInput.addEventListener('input', () => {
+    authStatus.textContent = authInput.value
+      ? `Typing… ${authInput.value.length} character(s) entered.`
+      : 'Field is idle.';
+  });
+
+  authInput.addEventListener('change', () => {
+    authStatus.textContent = authInput.value.trim()
+      ? `Value committed: "${authInput.value.trim()}"`
+      : 'Field is idle.';
+  });
+
+  /* -------------------------------------------------------
+     Drag & Drop Zone — dragstart / dragover / drop
+     The chip is draggable; dropping it on the zone triggers
+     the custom action.
+  ------------------------------------------------------- */
+  const dragChip = document.getElementById('drag-chip');
+  const dropZone = document.getElementById('drop-zone');
+  const dragDropStatus = document.getElementById('dragdrop-status');
+
+  dragChip.addEventListener('dragstart', (e) => {
+    e.dataTransfer.setData('text/plain', 'chip');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault(); // required to allow a drop
+    dropZone.classList.add('is-dragover');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('is-dragover');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('is-dragover');
+    dropZone.classList.add('is-dropped');
+    dropZone.textContent = 'Chip received!';
+    dragDropStatus.textContent = 'Custom action triggered — drop event handled.';
+  });
+
+  /* -------------------------------------------------------
+     Runtime Event Controller — pointerdown + removeEventListener
+     Counts pointer presses, then permanently detaches the
+     listener after a threshold to demonstrate
+     removeEventListener.
+  ------------------------------------------------------- */
+  const runtimeBtn = document.getElementById('runtime-btn');
+  const runtimeStatus = document.getElementById('runtime-status');
+  const MAX_PRESSES = 5;
+  let pressCount = 0;
+
+  function handlePointerDown() {
+    pressCount += 1;
+    runtimeStatus.textContent = `Presses registered: ${pressCount}`;
+
+    if (pressCount >= MAX_PRESSES) {
+      runtimeBtn.removeEventListener('pointerdown', handlePointerDown);
+      runtimeBtn.classList.add('is-disabled');
+      runtimeBtn.textContent = 'Listener Removed';
+      runtimeStatus.textContent = `Presses registered: ${pressCount} — listener detached via removeEventListener().`;
+    }
+  }
+
+  runtimeBtn.addEventListener('pointerdown', handlePointerDown);
+
+});
+  </script>
+</body>
+</html>
