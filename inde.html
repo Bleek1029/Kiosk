@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kiosk Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <main class="terminal">
+    <header class="terminal-header">
+      <h1>kiosk Terminal</h1>
+      <span class="status-badge" id="system-status">System Online</span>
+    </header>
+
+    <div class="terminal-grid">
+
+      <!-- mouseenter / mouseleave target -->
+      <article class="term-card" id="card-hover">
+        <h2>Proximity Diagnostics</h2>
+        <p>Move your cursor into and out of this card.</p>
+      </article>
+
+      <!-- wheel target -->
+      <article class="term-card" id="card-scroll">
+        <h2>Scroll Wheel Stream</h2>
+        <p>Scroll your mouse wheel or trackpad over this card:</p>
+        <pre class="term-output" id="scroll-output">deltaY: — | Direction: —</pre>
+      </article>
+
+      <!-- input / change target -->
+      <article class="term-card" id="card-auth">
+        <h2>User Authentication Prompt</h2>
+        <label for="auth-input" class="visually-hidden">Authentication field</label>
+        <input type="text" id="auth-input" class="term-input" placeholder="Type to see live updates…">
+        <p class="term-status" id="auth-status">Field is idle.</p>
+      </article>
+
+      <!-- dragstart / drop target -->
+      <article class="term-card" id="card-dragdrop">
+        <h2>Drag &amp; Drop Zone</h2>
+        <p>Drag the chip into the drop zone below.</p>
+        <div class="drag-chip" id="drag-chip" draggable="true">DRAG ME</div>
+        <div class="drop-zone" id="drop-zone">Drop here</div>
+        <p class="term-status" id="dragdrop-status">Waiting for drop…</p>
+      </article>
+
+      <!-- pointerdown target + removeEventListener demo -->
+      <article class="term-card" id="card-runtime">
+        <h2>Runtime Event Controller</h2>
+        <p>Press the button below to register pointer presses, or watch the listener detach itself via code.</p>
+        <button type="button" id="runtime-btn" class="term-button">Press Me (Active)</button>
+        <p class="term-status" id="runtime-status">Presses registered: 0</p>
+      </article>
+
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
