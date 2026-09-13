@@ -3,41 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>kiosk Terminal</title>
+  <title>OmniKiosk MK-II — Field Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
 /* ---------------------------------------------------------
-   OmniKiosk Terminal — tokens
+   OmniKiosk MK-II — control-panel token system
 --------------------------------------------------------- */
 :root {
-  --bg: #0A0D16;
-  --panel-bg: #121729;
-  --panel-border: #1E2540;
-  --card-bg: #1A2036;
-  --card-border: #262E4A;
-  --card-border-active: #3B82F6;
+  --bg-outer: #0F0E0C;
 
-  --accent: #4EA8FF;
-  --accent-strong: #3B82F6;
-  --accent-strong-hover: #2F6FDE;
+  --panel: #1B1A17;
+  --panel-recess: #141311;
+  --frame-edge: #322D24;
+  --rivet: #4A4638;
 
-  --text-primary: #E5E9F5;
-  --text-muted: #8A93B3;
+  --text-primary: #EDE6D8;
+  --text-muted: #8C8676;
 
-  --mono-bg: #10162B;
-  --mono-border: #232B48;
+  --amber: #FFB000;
+  --amber-dim: #6B4A00;
+  --teal: #3DDC97;
+  --teal-dim: #1F5D42;
+  --red: #D6534A;
+  --red-dim: #5A2622;
 
-  --green-bg: #123524;
-  --green-border: #235C3C;
-  --green-text: #4ADE80;
-
-  --font-display: "Space Grotesk", sans-serif;
-  --font-body: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-
-  --radius: 12px;
+  --font-display: "Big Shoulders Stencil", sans-serif;
+  --font-body: "IBM Plex Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
 }
 
 * { box-sizing: border-box; }
@@ -52,14 +46,14 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
+  background: var(--bg-outer);
+  background-image: radial-gradient(circle at 50% 0%, #1a1815 0%, #0F0E0C 70%);
   color: var(--text-primary);
   font-family: var(--font-body);
   line-height: 1.5;
   display: flex;
-  align-items: flex-start;
   justify-content: center;
-  padding: clamp(1.5rem, 6vh, 5rem) 1.25rem;
+  padding: clamp(1.5rem, 6vh, 4.5rem) 1.25rem;
 }
 
 .visually-hidden {
@@ -73,375 +67,646 @@ body {
 button:focus-visible,
 input:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--amber);
   outline-offset: 2px;
 }
 
 /* ---------------------------------------------------------
-   Terminal panel
+   Outer console frame
 --------------------------------------------------------- */
-.terminal {
+.console {
+  position: relative;
   width: 100%;
-  max-width: 780px;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
+  max-width: 840px;
+  background: var(--panel);
+  border: 1px solid var(--frame-edge);
+  border-radius: 6px;
+  box-shadow:
+    0 40px 70px -25px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  padding: 1.5rem;
 }
 
-.terminal-header {
+.rivet {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--rivet);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.05);
+}
+.rivet-tl { top: 10px; left: 10px; }
+.rivet-tr { top: 10px; right: 10px; }
+.rivet-bl { bottom: 10px; left: 10px; }
+.rivet-br { bottom: 10px; right: 10px; }
+
+/* ---------------------------------------------------------
+   Nameplate header
+--------------------------------------------------------- */
+.console-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.5rem 1.75rem;
-  border-bottom: 1px solid var(--panel-border);
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--frame-edge);
+  padding: 0.25rem 0.5rem 1.1rem;
+  margin-bottom: 1.1rem;
 }
 
-.terminal-header h1 {
+.nameplate h1 {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: clamp(1.5rem, 4vw, 2rem);
   margin: 0;
   color: var(--text-primary);
 }
 
-.status-badge {
-  flex-shrink: 0;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 0.4rem 0.9rem;
+.nameplate h1 .model {
+  color: var(--amber);
+}
+
+.nameplate .subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.status-cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.7rem;
+  background: var(--panel-recess);
+  border: 1px solid var(--frame-edge);
   border-radius: 999px;
-  background: var(--green-bg);
-  border: 1px solid var(--green-border);
-  color: var(--green-text);
+}
+
+.led {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 6px 2px rgba(255, 176, 0, 0.55);
+  animation: led-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes led-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.status-text {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
 /* ---------------------------------------------------------
-   Card grid
+   Module grid — asymmetric, wired panel
 --------------------------------------------------------- */
-.terminal-grid {
+.console-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  padding: 1.75rem;
+  gap: 0.9rem;
+}
+
+.grid-row-2 {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0.9rem;
+  margin-top: 0.9rem;
 }
 
 @media (max-width: 720px) {
-  .terminal-grid {
+  .console-grid,
+  .grid-row-2 {
     grid-template-columns: 1fr;
   }
 }
 
-.term-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  padding: 1.1rem;
+.module {
+  background: var(--panel-recess);
+  border: 1px solid var(--frame-edge);
+  border-radius: 4px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.module h2 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin: 0 0 0.2rem;
+}
+
+.module p.hint {
+  margin: 0 0 0.7rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------
+   Module 1 — Proximity sensor (mouseenter / mouseleave)
+--------------------------------------------------------- */
+.reticle {
+  position: relative;
+  flex: 1;
+  min-height: 84px;
+  border: 1px dashed var(--frame-edge);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reticle .corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--text-muted);
   transition: border-color 0.15s ease;
 }
+.reticle .corner-tl { top: 6px; left: 6px; border-top: 2px solid; border-left: 2px solid; }
+.reticle .corner-tr { top: 6px; right: 6px; border-top: 2px solid; border-right: 2px solid; }
+.reticle .corner-bl { bottom: 6px; left: 6px; border-bottom: 2px solid; border-left: 2px solid; }
+.reticle .corner-br { bottom: 6px; right: 6px; border-bottom: 2px solid; border-right: 2px solid; }
 
-/* Hook for JS to add on mouseenter / remove on mouseleave —
-   not a plain CSS :hover, since it's driven by an actual
-   addEventListener pair. */
-.term-card.is-active {
-  border-color: var(--card-border-active);
-}
-
-.term-card h2 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--accent);
-  margin: 0 0 0.5rem;
-}
-
-.term-card p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.term-status {
-  margin-top: 0.7rem !important;
-  font-size: 0.8rem !important;
-  color: var(--text-muted);
-}
-
-/* ---------------------------------------------------------
-   Keyboard / scroll output box
---------------------------------------------------------- */
-.term-output {
-  margin: 0.7rem 0 0;
-  padding: 0.6rem 0.75rem;
-  background: var(--mono-bg);
-  border: 1px solid var(--mono-border);
-  border-radius: 8px;
+.reticle .reading {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-primary);
-  white-space: pre-wrap;
-  word-break: break-word;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
+.card-hover.is-armed .corner { border-color: var(--amber); }
+.card-hover.is-armed .reading { color: var(--amber); }
+
 /* ---------------------------------------------------------
-   Auth input
+   Module 2 — Scroll gauge (wheel)
 --------------------------------------------------------- */
-.term-input {
+.gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.gauge {
   width: 100%;
-  margin-top: 0.7rem;
-  padding: 0.55rem 0.7rem;
-  background: var(--mono-bg);
-  border: 1px solid var(--mono-border);
-  border-radius: 8px;
+  max-width: 150px;
+  overflow: visible;
+}
+
+.gauge-arc {
+  fill: none;
+  stroke: var(--frame-edge);
+  stroke-width: 3;
+}
+
+.gauge-tick {
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+
+.gauge-needle {
+  stroke: var(--amber);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-origin: 80px 90px;
+  transition: transform 0.12s ease-out;
+}
+
+.gauge-hub {
+  fill: var(--frame-edge);
+  stroke: var(--rivet);
+}
+
+.gauge-readout {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.gauge-readout .value { color: var(--amber); }
+
+/* ---------------------------------------------------------
+   Module 3 — Access keypad (input / change)
+--------------------------------------------------------- */
+.keypad-input {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  background: var(--panel);
+  border: 1px solid var(--frame-edge);
+  border-radius: 4px;
   color: var(--text-primary);
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
 }
 
-.term-input::placeholder {
+.keypad-input::placeholder { color: var(--text-muted); }
+
+.led-row {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.led-row .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--frame-edge);
+  transition: background 0.12s ease;
+}
+
+.led-row .dot.lit { background: var(--amber); }
+.led-row .dot.committed { background: var(--teal); }
+
+.module-status {
+  margin-top: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
 /* ---------------------------------------------------------
-   Drag & drop
+   Module 4 — Cargo slot (dragstart / drop)
 --------------------------------------------------------- */
-.drag-chip {
-  display: inline-block;
-  margin-top: 0.8rem;
-  padding: 0.4rem 0.8rem;
-  background: var(--accent-strong);
-  border-radius: 999px;
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+.cargo-row {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex: 1;
+}
+
+.chip {
+  flex-shrink: 0;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 2px solid var(--amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--amber);
   cursor: grab;
   user-select: none;
 }
+.chip:active { cursor: grabbing; }
 
-.drag-chip:active {
-  cursor: grabbing;
-}
-
-.drop-zone {
-  margin-top: 0.7rem;
-  padding: 0.9rem 0.7rem;
-  border: 1px dashed var(--mono-border);
-  border-radius: 8px;
-  background: var(--mono-bg);
+.slot {
+  flex: 1;
+  min-height: 58px;
+  border: 2px dashed var(--frame-edge);
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
   color: var(--text-muted);
-  font-size: 0.8rem;
   text-align: center;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  padding: 0 0.8rem;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
-.drop-zone.is-dragover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.drop-zone.is-dropped {
-  border-style: solid;
-  border-color: var(--green-border);
-  background: var(--green-bg);
-  color: var(--green-text);
-}
+.slot.is-armed { border-color: var(--amber); color: var(--amber); }
+.slot.is-loaded { border-style: solid; border-color: var(--teal); color: var(--teal); background: rgba(61, 220, 151, 0.06); }
 
 /* ---------------------------------------------------------
-   Runtime button
+   Module 5 — Emergency stop (pointerdown + removeEventListener)
 --------------------------------------------------------- */
-.term-button {
-  margin-top: 0.8rem;
-  width: 100%;
-  padding: 0.55rem 0.9rem;
-  background: var(--accent-strong);
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 500;
+.stop-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.stop-button {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 4px solid #2a1c1a;
+  background: radial-gradient(circle at 35% 30%, #E36F65, var(--red) 70%);
+  box-shadow: 0 4px 0 #7a2e28, 0 6px 10px rgba(0,0,0,0.4);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
 }
 
-.term-button:hover {
-  background: var(--accent-strong-hover);
+.stop-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #7a2e28, 0 2px 6px rgba(0,0,0,0.4);
 }
 
-/* State the JS applies once the listener is permanently
-   removed via removeEventListener. */
-.term-button.is-disabled {
-  background: #2A2F45;
-  color: var(--text-muted);
+.stop-button.is-tripped {
+  background: radial-gradient(circle at 35% 30%, #3a3a3a, #222 70%);
+  box-shadow: 0 1px 0 #111, 0 2px 6px rgba(0,0,0,0.5);
+  transform: translateY(3px);
   cursor: not-allowed;
+}
+
+.tally {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.tally .count { color: var(--amber); font-size: 1rem; }
+.stop-button.is-tripped ~ .tally-wrap .count { color: var(--red); }
+
+/* ---------------------------------------------------------
+   System log — shared output bus
+--------------------------------------------------------- */
+.system-log-wrap {
+  margin-top: 0.9rem;
+  border: 1px solid var(--frame-edge);
+  border-radius: 4px;
+  background: var(--panel-recess);
+  padding: 0.6rem 0.8rem;
+}
+
+.system-log-wrap h2 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 0.4rem;
+}
+
+.system-log {
+  height: 108px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.system-log .log-line {
+  color: var(--text-muted);
+}
+
+.system-log .log-line:last-child {
+  color: var(--text-primary);
 }
   </style>
 </head>
 <body>
 
-  <main class="terminal">
-    <header class="terminal-header">
-      <h1>kiosk Terminal</h1>
-      <span class="status-badge" id="system-status">System Online</span>
+  <main class="console">
+    <span class="rivet rivet-tl"></span>
+    <span class="rivet rivet-tr"></span>
+    <span class="rivet rivet-bl"></span>
+    <span class="rivet rivet-br"></span>
+
+    <header class="console-header">
+      <div class="nameplate">
+        <h1>OmniKiosk <span class="model">MK-II</span></h1>
+        <p class="subtitle">Field terminal diagnostics panel</p>
+      </div>
+      <div class="status-cluster">
+        <span class="led" aria-hidden="true"></span>
+        <span class="status-text" id="system-status">Online</span>
+      </div>
     </header>
 
-    <div class="terminal-grid">
+    <div class="console-grid">
 
-      <!-- mouseenter / mouseleave target -->
-      <article class="term-card" id="card-hover">
-        <h2>Proximity Diagnostics</h2>
-        <p>Move your cursor into and out of this card.</p>
+      <!-- mouseenter / mouseleave -->
+      <article class="module card-hover" id="card-hover">
+        <h2>Proximity sensor</h2>
+        <p class="hint">Move the cursor across the reticle.</p>
+        <div class="reticle">
+          <span class="corner corner-tl"></span>
+          <span class="corner corner-tr"></span>
+          <span class="corner corner-bl"></span>
+          <span class="corner corner-br"></span>
+          <span class="reading" id="proximity-reading">Standby</span>
+        </div>
       </article>
 
-      <!-- wheel target -->
-      <article class="term-card" id="card-scroll">
-        <h2>Scroll Wheel Stream</h2>
-        <p>Scroll your mouse wheel or trackpad over this card:</p>
-        <pre class="term-output" id="scroll-output">deltaY: — | Direction: —</pre>
+      <!-- wheel -->
+      <article class="module" id="card-scroll">
+        <h2>Scroll gauge</h2>
+        <p class="hint">Scroll over the dial.</p>
+        <div class="gauge-wrap">
+          <svg class="gauge" viewBox="0 0 160 100" aria-hidden="true">
+            <path class="gauge-arc" d="M14,90 A66,66 0 0 1 146,90"></path>
+            <line class="gauge-tick" x1="80" y1="24" x2="80" y2="34" transform="rotate(-70 80 90)"></line>
+            <line class="gauge-tick" x1="80" y1="24" x2="80" y2="34" transform="rotate(-35 80 90)"></line>
+            <line class="gauge-tick" x1="80" y1="24" x2="80" y2="34"></line>
+            <line class="gauge-tick" x1="80" y1="24" x2="80" y2="34" transform="rotate(35 80 90)"></line>
+            <line class="gauge-tick" x1="80" y1="24" x2="80" y2="34" transform="rotate(70 80 90)"></line>
+            <line class="gauge-needle" id="gauge-needle" x1="80" y1="90" x2="80" y2="34"></line>
+            <circle class="gauge-hub" cx="80" cy="90" r="6"></circle>
+          </svg>
+          <div class="gauge-readout">
+            <span>DELTA <span class="value" id="gauge-delta">0</span></span>
+            <span>DIR <span class="value" id="gauge-dir">—</span></span>
+          </div>
+        </div>
       </article>
 
-      <!-- input / change target -->
-      <article class="term-card" id="card-auth">
-        <h2>User Authentication Prompt</h2>
+      <!-- input / change -->
+      <article class="module" id="card-auth">
+        <h2>Access keypad</h2>
+        <p class="hint">Type to unlock, then click away to commit.</p>
         <label for="auth-input" class="visually-hidden">Authentication field</label>
-        <input type="text" id="auth-input" class="term-input" placeholder="Type to see live updates…">
-        <p class="term-status" id="auth-status">Field is idle.</p>
+        <input type="text" id="auth-input" class="keypad-input" placeholder="Enter code…">
+        <div class="led-row" id="led-row" aria-hidden="true">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+        <p class="module-status" id="auth-status">Idle.</p>
       </article>
 
-      <!-- dragstart / drop target -->
-      <article class="term-card" id="card-dragdrop">
-        <h2>Drag &amp; Drop Zone</h2>
-        <p>Drag the chip into the drop zone below.</p>
-        <div class="drag-chip" id="drag-chip" draggable="true">DRAG ME</div>
-        <div class="drop-zone" id="drop-zone">Drop here</div>
-        <p class="term-status" id="dragdrop-status">Waiting for drop…</p>
+    </div>
+
+    <div class="grid-row-2">
+
+      <!-- dragstart / drop -->
+      <article class="module" id="card-dragdrop">
+        <h2>Cargo slot</h2>
+        <p class="hint">Drag the chip into the slot.</p>
+        <div class="cargo-row">
+          <div class="chip" id="drag-chip" draggable="true">CHIP</div>
+          <div class="slot" id="drop-zone">Awaiting cargo</div>
+        </div>
       </article>
 
-      <!-- pointerdown target + removeEventListener demo -->
-      <article class="term-card" id="card-runtime">
-        <h2>Runtime Event Controller</h2>
-        <p>Press the button below to register pointer presses, or watch the listener detach itself via code.</p>
-        <button type="button" id="runtime-btn" class="term-button">Press Me (Active)</button>
-        <p class="term-status" id="runtime-status">Presses registered: 0</p>
+      <!-- pointerdown + removeEventListener -->
+      <article class="module" id="card-runtime">
+        <h2>Emergency stop</h2>
+        <p class="hint">Press the button. It latches after five presses.</p>
+        <div class="stop-row">
+          <button type="button" id="runtime-btn" class="stop-button" aria-label="Emergency stop test button"></button>
+          <div class="tally-wrap">
+            <p class="tally">Presses: <span class="count" id="runtime-count">0</span> / 5</p>
+          </div>
+        </div>
       </article>
 
+    </div>
+
+    <div class="system-log-wrap">
+      <h2>System log</h2>
+      <div class="system-log" id="system-log" role="log" aria-live="polite"></div>
     </div>
   </main>
 
   <script>
-/* ---------------------------------------------------------
-   OmniKiosk Terminal — behavior
---------------------------------------------------------- */
-
 document.addEventListener('DOMContentLoaded', () => {
 
+  /* Shared output bus */
+  const logEl = document.getElementById('system-log');
+  function logEvent(text) {
+    const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.textContent = `[${time}] ${text}`;
+    logEl.appendChild(line);
+    while (logEl.children.length > 8) {
+      logEl.removeChild(logEl.firstChild);
+    }
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  logEvent('System ready. Awaiting input.');
+
   /* -------------------------------------------------------
-     Proximity Diagnostics — mouseenter / mouseleave
-     Unlike mouseover/mouseout, these don't bubble from child
-     elements, so the card only reacts to the cursor crossing
-     its own boundary.
+     Proximity sensor — mouseenter / mouseleave
   ------------------------------------------------------- */
   const hoverCard = document.getElementById('card-hover');
+  const proximityReading = document.getElementById('proximity-reading');
 
   hoverCard.addEventListener('mouseenter', () => {
-    hoverCard.classList.add('is-active');
+    hoverCard.classList.add('is-armed');
+    proximityReading.textContent = 'Contact';
+    logEvent('Proximity sensor engaged.');
   });
 
   hoverCard.addEventListener('mouseleave', () => {
-    hoverCard.classList.remove('is-active');
+    hoverCard.classList.remove('is-armed');
+    proximityReading.textContent = 'Standby';
+    logEvent('Proximity sensor cleared.');
   });
 
   /* -------------------------------------------------------
-     Scroll Wheel Stream — wheel
-     Reports scroll delta and direction while the pointer is
-     over the card.
+     Scroll gauge — wheel
   ------------------------------------------------------- */
   const scrollCard = document.getElementById('card-scroll');
-  const scrollOutput = document.getElementById('scroll-output');
+  const needle = document.getElementById('gauge-needle');
+  const deltaOut = document.getElementById('gauge-delta');
+  const dirOut = document.getElementById('gauge-dir');
+  let lastGaugeLog = 0;
 
   scrollCard.addEventListener('wheel', (e) => {
     e.preventDefault();
     const direction = e.deltaY > 0 ? 'down' : 'up';
-    scrollOutput.textContent = `deltaY: ${e.deltaY.toFixed(0)} | Direction: ${direction}`;
+    const clamped = Math.max(-80, Math.min(80, e.deltaY / 2));
+    needle.style.transform = `rotate(${clamped}deg)`;
+    deltaOut.textContent = e.deltaY.toFixed(0);
+    dirOut.textContent = direction;
+
+    const now = performance.now();
+    if (now - lastGaugeLog > 200) {
+      logEvent(`Scroll gauge: ${e.deltaY.toFixed(0)}, direction ${direction}.`);
+      lastGaugeLog = now;
+    }
   }, { passive: false });
 
   /* -------------------------------------------------------
-     User Authentication Prompt — input / change
-     "input" fires on every keystroke for live feedback;
-     "change" fires once the field is committed (loses focus
-     with a new value).
+     Access keypad — input / change
   ------------------------------------------------------- */
   const authInput = document.getElementById('auth-input');
   const authStatus = document.getElementById('auth-status');
+  const dots = Array.from(document.querySelectorAll('#led-row .dot'));
 
   authInput.addEventListener('input', () => {
-    authStatus.textContent = authInput.value
-      ? `Typing… ${authInput.value.length} character(s) entered.`
-      : 'Field is idle.';
+    const len = authInput.value.length;
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('lit', i < len);
+      dot.classList.remove('committed');
+    });
+    authStatus.textContent = len
+      ? `Typing… ${len} character(s) entered.`
+      : 'Idle.';
   });
 
   authInput.addEventListener('change', () => {
-    authStatus.textContent = authInput.value.trim()
-      ? `Value committed: "${authInput.value.trim()}"`
-      : 'Field is idle.';
+    const value = authInput.value.trim();
+    if (value) {
+      dots.forEach((dot) => {
+        dot.classList.add('committed');
+        dot.classList.remove('lit');
+      });
+      authStatus.textContent = `Value committed: "${value}"`;
+      logEvent(`Access keypad: value committed.`);
+    } else {
+      authStatus.textContent = 'Idle.';
+    }
   });
 
   /* -------------------------------------------------------
-     Drag & Drop Zone — dragstart / dragover / drop
-     The chip is draggable; dropping it on the zone triggers
-     the custom action.
+     Cargo slot — dragstart / dragover / drop
   ------------------------------------------------------- */
   const dragChip = document.getElementById('drag-chip');
   const dropZone = document.getElementById('drop-zone');
-  const dragDropStatus = document.getElementById('dragdrop-status');
 
   dragChip.addEventListener('dragstart', (e) => {
     e.dataTransfer.setData('text/plain', 'chip');
     e.dataTransfer.effectAllowed = 'move';
+    logEvent('Cargo chip lifted.');
   });
 
   dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault(); // required to allow a drop
-    dropZone.classList.add('is-dragover');
+    e.preventDefault();
+    dropZone.classList.add('is-armed');
   });
 
   dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('is-dragover');
+    dropZone.classList.remove('is-armed');
   });
 
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.classList.remove('is-dragover');
-    dropZone.classList.add('is-dropped');
-    dropZone.textContent = 'Chip received!';
-    dragDropStatus.textContent = 'Custom action triggered — drop event handled.';
+    dropZone.classList.remove('is-armed');
+    dropZone.classList.add('is-loaded');
+    dropZone.textContent = 'Cargo loaded';
+    logEvent('Cargo chip loaded into slot.');
   });
 
   /* -------------------------------------------------------
-     Runtime Event Controller — pointerdown + removeEventListener
-     Counts pointer presses, then permanently detaches the
-     listener after a threshold to demonstrate
-     removeEventListener.
+     Emergency stop — pointerdown + removeEventListener
   ------------------------------------------------------- */
   const runtimeBtn = document.getElementById('runtime-btn');
-  const runtimeStatus = document.getElementById('runtime-status');
+  const runtimeCount = document.getElementById('runtime-count');
   const MAX_PRESSES = 5;
   let pressCount = 0;
 
   function handlePointerDown() {
     pressCount += 1;
-    runtimeStatus.textContent = `Presses registered: ${pressCount}`;
+    runtimeCount.textContent = pressCount;
+    logEvent(`Emergency stop pressed. Count ${pressCount}.`);
 
     if (pressCount >= MAX_PRESSES) {
       runtimeBtn.removeEventListener('pointerdown', handlePointerDown);
-      runtimeBtn.classList.add('is-disabled');
-      runtimeBtn.textContent = 'Listener Removed';
-      runtimeStatus.textContent = `Presses registered: ${pressCount} — listener detached via removeEventListener().`;
+      runtimeBtn.classList.add('is-tripped');
+      runtimeBtn.setAttribute('aria-label', 'Breaker tripped, button disabled');
+      logEvent('Breaker tripped after 5 presses. Listener detached.');
     }
   }
 
